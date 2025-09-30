@@ -1,47 +1,81 @@
-Sistema de Gestión para una Librería
-Este proyecto es un sistema básico de gestión para una librería, desarrollado en Python con la biblioteca tkinter para la interfaz de usuario y mysql.connector para la conexión a una base de datos MySQL.
+📚 Sistema de Gestión para una Librería
+Este proyecto es un sistema de gestión integral para una librería, desarrollado en Python con una interfaz gráfica intuitiva y conexión a una base de datos relacional. Permite administrar autores, categorías, libros, clientes y ventas de forma eficiente y segura.
 
-El sistema permite realizar operaciones CRUD (crear, Leer, Actualizar, Eliminar) en las siguientes entidades:
+Interfaz del sistema
+(Ejemplo visual: asegúrate de incluir una captura de pantalla en tu repositorio)
 
-Autores: Gestión de información sobre los autores de los libros.
-Categorías: Organización de libros por categorías.
-Libros: Registro y control del inventario de libros.
-Clientes: Almacenamiento de los datos de los clientes.
-Ventas: Registro de transacciones de venta, con lógica de negocio para la gestión de stock.
-Contenido del Repositorio
-DB libreria.sql: Archivo SQL con el esquema de la base de datos (CREATE TABLE).
-Store Pro.sql: Archivo SQL con los procedimientos almacenados (CREATE PROCEDURE) utilizados para realizar las operaciones de la aplicación.
-Sistema libreria.py: El script principal de Python que ejecuta la interfaz gráfica y se conecta a la base de datos para interactuar con ella.
-Requisitos
-Para poder ejecutar este proyecto, necesitas tener instalados los siguientes componentes:
+🔧 Funcionalidades
+El sistema implementa operaciones CRUD (Crear, Leer, Actualizar, Eliminar) sobre las siguientes entidades:
 
-Python 3.x: O otra version referente El lenguaje de programación.
-MySQL Server: El sistema de gestión de bases de datos. Se debe INICIAR XAMPP PARA ESTABLECER CONEXION
+Autores: Gestión de información personal y biográfica.
+Categorías: Organización temática de los libros.
+Libros: Registro detallado con ISBN, precio, stock y relación con autor/categoría.
+Clientes: Almacenamiento de datos de contacto y dirección.
+Ventas: Registro de transacciones con lógica de negocio integrada:
+Cálculo automático del total.
+Verificación de stock disponible.
+Actualización automática del inventario tras cada venta.
+Mensaje de error si el stock es insuficiente.
+🗃️ Contenido del Repositorio
+DB libreria.sql: Esquema de la base de datos (tablas y relaciones).
+Store Pro.sql: Procedimientos almacenados para operaciones seguras y eficientes.
+Sistema libreria.py: Script principal con la interfaz gráfica (Tkinter) y lógica de la aplicación.
+dragon.ico: Ícono personalizado para la ventana de la aplicación.
+fondo_libros.jpg (u otras imágenes de fondo): Imágenes para la interfaz visual.
+📌 Importante: Todas las imágenes (dragon.ico, fondo_libros.jpg, etc.) deben guardarse en la misma carpeta que Sistema libreria.py. 
+
+⚙️ Requisitos
+Para ejecutar este proyecto, necesitas:
+
+Python 3.x (con tkinter incluido).
+Servidor MySQL (recomendado: XAMPP para entornos locales).
 Bibliotecas de Python:
-tkinter: Generalmente viene incluido en la instalación de Python.
-mysql-connector-python: Para conectar Python con MySQL. Puedes instalarlo usando pip:
+bash
+
+
+1
+2
 pip install mysql-connector-python
-Configuración y Uso
-Configuración de la Base de Datos:
+pip install Pillow  # Solo si usas imágenes en el formulario de autores
+🚀 Configuración y Uso
+1. Configurar la base de datos
+Inicia XAMPP y asegúrate de que el módulo MySQL esté activo.
+Importa DB libreria.sql en phpMyAdmin (o tu cliente MySQL) para crear la base de datos libreria_db.
+Importa Store Pro.sql para crear los procedimientos almacenados.
+2. Verificar conexión
+Abre Sistema libreria.py y confirma que los parámetros de conexión coincidan con tu entorno (por defecto: localhost, usuario root, sin contraseña):
 
-Asegúrate de que tu servidor MySQL esté en ejecución.
-Importa el archivo DB libreria.sql en tu servidor MySQL para crear la base de datos y las tablas necesarias.
-Importa el archivo Store Pro.sql para crear todos los procedimientos almacenados.
-Verifica que los datos de conexión en el archivo Sistema libreria.py (líneas 21-25) coincidan con la configuración de tu base de datos local (host, user, password, database).
-Ejecutar la Aplicación:
+python
 
-Abre una terminal o línea de comandos.
-Navega al directorio donde se encuentra el archivo Sistema libreria.py.
-Ejecuta el script de Python:
+
+1
+2
+3
+4
+5
+6
+conexion = mysql.connector.connect(
+    host='localhost',
+    database='libreria_db',
+    user='root',
+    password=''
+)
+3. Ejecutar la aplicación
+En tu terminal, navega a la carpeta del proyecto y ejecuta:
+
+bash
+
+
+1
 python "Sistema libreria.py"
-Ahora puedes empezar a usar la aplicación para gestionar autores, categorías, libros, clientes y ventas de tu librería.
-
-Procedimientos Almacenados Destacados
-El sistema utiliza procedimientos almacenados para garantizar la integridad y el control de las operaciones, especialmente en el módulo de ventas. El procedimiento RegistrarVenta incluye la siguiente lógica de negocio:
-
-Calcula el total de la venta automáticamente.
-Verifica el stock del libro antes de registrar la venta.
-Si hay suficiente stock, registra la venta y disminuye la cantidad del libro en el inventario.
-Si el stock es insuficiente, lanza un mensaje de error.
+💡 Características Técnicas Destacadas
+Interfaz multi-pestañas con diseño limpio y funcional.
+Validaciones en tiempo real:
+Formato de correo electrónico.
+IDs numéricos positivos.
+Precios y cantidades válidas.
+Seguridad y rendimiento mediante el uso de procedimientos almacenados.
+Gestión de imágenes (opcional): Soporte para fotos de autores.
+Fondos personalizados por pestaña para una experiencia visual atractiva.
 
 Por ultimo se debe descargar la imagen para el fondo e icono en formato ico, las imagenes del repositorio se deben guardar en la misma carpeta donde se encuentra el codigo de PYTHON
