@@ -1,10 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-import mysql.connector
-from mysql.connector import Error
-import re
 from PIL import Image, ImageTk
+import controladores as controllers
 
 # Crear la ventana principal
 root = tk.Tk()
@@ -43,67 +41,21 @@ def aplicar_fondo_a_pestaña(pestaña, ruta_imagen, ancho=800, alto=600):
         fondo_label = tk.Label(pestaña, image=photo)
         fondo_label.image = photo
         fondo_label.place(x=0, y=0, relwidth=1, relheight=1)
-
         return fondo_label
     except Exception as e:
-        print(f"Error al cargar fondo para {ruta_imagen}: {e}")
+        print(f"Error al cargar fondo: {e}")
         return None
 
-# Aplicar fondos (usa tus propias imágenes)
+# Aplicar fondos
 aplicar_fondo_a_pestaña(tab1, "fondo_autores.jpg")
 aplicar_fondo_a_pestaña(tab2, "fondo_categorias.jpg")
 aplicar_fondo_a_pestaña(tab3, "fondo_libros.jpg")
 aplicar_fondo_a_pestaña(tab4, "fondo_clientes.jpg")
 aplicar_fondo_a_pestaña(tab5, "fondo_ventas.jpg")
 
-# CONEXIÓN A LA BASE DE DATOS
-def conectar_db():
-    try:
-        conexion = mysql.connector.connect(
-            host='localhost',
-            database='libreria_db',
-            user='root',
-            password=''
-        )
-        if conexion.is_connected():
-            return conexion
-    except Error as e:
-        print("ERROR DE CONEXIÓN:")
-        messagebox.showerror("Error", f"Error al conectar a la base de datos: {e}")
-        return None
-
-
 # FUNCIÓN PARA CONVERTIR RGB A HEX
 def rgb_to_hex(r, g, b):
     return f"#{r:02x}{g:02x}{b:02x}"
-
-def validar_email(email):
-    #Validar el correo electronico
-    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(patron, email) is not None
-
-def validar_id(valor):
-    #Validar el ID
-    if not valor:
-        return False
-    try:
-        id_num = int(valor)
-        return id_num > 0
-    except ValueError:
-        return False
-
-def validar_numero_positivo(valor, permitir_decimal=False):
-    #Validar numeros positivos
-    if not valor:
-        return False
-    try:
-        if permitir_decimal:
-            num = float(valor)
-        else:
-            num = int(valor)
-        return num >= 0
-    except ValueError:
-        return False
 
 # FUNCIONES PARA LIMPIAR
 def limpiar_autores():
@@ -151,308 +103,6 @@ def limpiar_ventas():
     fecha_venta.delete(0, tk.END)
     messagebox.showinfo("Éxito", "La información ha sido limpiada con éxito")
 
-
-# FUNCIONES CRUD - AUTORES
-def guardar_autor():
-    if not nombre_autor.get().strip():
-        messagebox.showwarning("Advertencia", "El campo 'Nombre' es obligatorio.")
-        return
-    if not apellido_autor.get().strip():
-        messagebox.showwarning("Advertencia", "El campo 'Apellido' es obligatorio.")
-        return
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('InsertarAutor', [
-            nombre_autor.get(),
-            apellido_autor.get(),
-            fecha_nacimiento.get() or None,
-            nacionalidad.get(),
-            biografia.get("1.0", tk.END).strip()
-        ])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Autor guardado correctamente")
-        limpiar_autores()
-        cargar_tabla_autores()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al guardar autor:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-def actualizar_autor():
-    if not id_autor.get():
-        messagebox.showwarning("Advertencia", "Debes ingresar el ID del autor a actualizar")
-        return
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('ActualizarAutor', [
-            int(id_autor.get()),
-            nombre_autor.get(),
-            apellido_autor.get(),
-            fecha_nacimiento.get() or None,
-            nacionalidad.get(),
-            biografia.get("1.0", tk.END).strip()
-        ])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Autor actualizado correctamente")
-        limpiar_autores()
-        cargar_tabla_autores()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al actualizar autor:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-def eliminar_autor():
-    if not id_autor.get():
-        messagebox.showwarning("Advertencia", "Debes ingresar el ID del autor a eliminar")
-        return
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('EliminarAutor', [int(id_autor.get())])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Autor eliminado correctamente")
-        limpiar_autores()
-        cargar_tabla_autores()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al eliminar autor:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-# FUNCIONES CRUD - CATEGORÍAS
-def guardar_categoria():
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('InsertarCategoria', [
-            nombre_categoria.get(),
-            descripcion_categoria.get("1.0", tk.END).strip()
-        ])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Categoría guardada correctamente")
-        limpiar_categorias()
-        cargar_tabla_categorias()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al guardar categoría:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-def actualizar_categoria():
-    if not id_categoria.get():
-        messagebox.showwarning("Advertencia", "Debes ingresar el ID de la categoría a actualizar")
-        return
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('ActualizarCategoria', [
-            int(id_categoria.get()),
-            nombre_categoria.get(),
-            descripcion_categoria.get("1.0", tk.END).strip()
-        ])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Categoría actualizada correctamente")
-        limpiar_categorias()
-        cargar_tabla_categorias()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al actualizar categoría:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-def eliminar_categoria():
-    if not id_categoria.get():
-        messagebox.showwarning("Advertencia", "Debes ingresar el ID de la categoría a eliminar")
-        return
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('EliminarCategoria', [int(id_categoria.get())])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Categoría eliminada correctamente")
-        limpiar_categorias()
-        cargar_tabla_categorias()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al eliminar categoría:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-
-# FUNCIONES CRUD - LIBROS
-def guardar_libro():
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('InsertarLibro', [
-            titulo_libro.get(),
-            isbn.get(),
-            int(id_autor_libro.get()),
-            int(id_categoria_libro.get()),
-            float(precio.get()),
-            int(stock.get()),
-            fecha_publicacion.get() or None
-        ])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Libro guardado correctamente")
-        limpiar_libros()
-        cargar_tabla_libros()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al guardar libro:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-def actualizar_libro():
-    if not id_libro.get():
-        messagebox.showwarning("Advertencia", "Debes ingresar el ID del libro a actualizar")
-        return
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('ActualizarLibro', [
-            int(id_libro.get()),
-            titulo_libro.get(),
-            isbn.get(),
-            int(id_autor_libro.get()),
-            int(id_categoria_libro.get()),
-            float(precio.get()),
-            int(stock.get()),
-            fecha_publicacion.get() or None
-        ])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Libro actualizado correctamente")
-        limpiar_libros()
-        cargar_tabla_libros()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al actualizar libro:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-def eliminar_libro():
-    if not id_libro.get():
-        messagebox.showwarning("Advertencia", "Debes ingresar el ID del libro a eliminar")
-        return
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('EliminarLibro', [int(id_libro.get())])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Libro eliminado correctamente")
-        limpiar_libros()
-        cargar_tabla_libros
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al eliminar libro:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-
-# FUNCIONES CRUD - CLIENTES
-def guardar_cliente():
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('InsertarCliente', [
-            nombre_cliente.get(),
-            apellido_cliente.get(),
-            email.get(),
-            telefono.get(),
-            direccion.get()
-        ])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Cliente guardado correctamente")
-        limpiar_clientes()
-        cargar_tabla_clientes()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al guardar cliente:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-def actualizar_cliente():
-    if not id_cliente.get():
-        messagebox.showwarning("Advertencia", "Debes ingresar el ID del cliente a actualizar")
-        return
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('ActualizarCliente', [
-            int(id_cliente.get()),
-            nombre_cliente.get(),
-            apellido_cliente.get(),
-            email.get(),
-            telefono.get(),
-            direccion.get()
-        ])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Cliente actualizado correctamente")
-        limpiar_clientes()
-        cargar_tabla_clientes()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al actualizar cliente:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-def eliminar_cliente():
-    if not id_cliente.get():
-        messagebox.showwarning("Advertencia", "Debes ingresar el ID del cliente a eliminar")
-        return
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('EliminarCliente', [int(id_cliente.get())])
-        conexion.commit()
-        messagebox.showinfo("Éxito", "Cliente eliminado correctamente")
-        limpiar_clientes()
-        cargar_tabla_clientes()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Error al eliminar cliente:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
 # FUNCIÓN PARA CREAR BOTONES
 def crear_botones(parent_tab, clear_command, save_command=None, update_command=None, delete_command=None):
     button_frame = tk.Frame(parent_tab)
@@ -477,52 +127,13 @@ def crear_botones(parent_tab, clear_command, save_command=None, update_command=N
                           command=clear_command)
     btn_clear.pack(side=tk.LEFT, padx=5)
 
-
-# BOTONES VENTAS
-def guardar_venta():
-    conexion = conectar_db()
-    if not conexion:
-        return
-    try:
-        cursor = conexion.cursor()
-        cursor.callproc('RegistrarVenta', [
-            int(id_cliente_venta.get()),
-            int(id_libro_venta.get()),
-            int(cantidad.get()),
-            float(precio_unitario.get()),
-            fecha_venta.get()
-        ])
-        conexion.commit()
-
-        for result in cursor.stored_results():
-            mensaje = result.fetchone()[0]
-            messagebox.showinfo("Éxito", mensaje)
-
-        limpiar_ventas()
-
-    except mysql.connector.Error as e:
-        if e.errno == 1644:
-            messagebox.showerror("Error", "Stock insuficiente para realizar la venta")
-        else:
-            messagebox.showerror("Error", f"Error al registrar venta:\n{e}")
-    except Exception as e:
-        messagebox.showerror("Error", f"Error inesperado:\n{e}")
-    finally:
-        cursor.close()
-        conexion.close()
-
-crear_botones(tab5, limpiar_ventas, guardar_venta)
-
-# Función para cargar autores
+# FUNCIONES PARA CARGAR TABLAS
 def cargar_tabla_autores():
-    # Limpiar tabla existente
     for item in tree_autores.get_children():
         tree_autores.delete(item)
-
-    conexion = conectar_db()
+    conexion = controllers.conectar_db()
     if not conexion:
         return
-
     try:
         cursor = conexion.cursor()
         cursor.execute("SELECT id_autor, nombre, apellido, fecha_nacimiento, nacionalidad FROM autores")
@@ -535,33 +146,27 @@ def cargar_tabla_autores():
         cursor.close()
         conexion.close()
 
-# Función para cargar categorias
 def cargar_tabla_categorias():
-    # Limpiar tabla existente
     for item in tree_categorias.get_children():
         tree_categorias.delete(item)
-
-    conexion = conectar_db()
+    conexion = controllers.conectar_db()
     if not conexion:
         return
-
     try:
         cursor = conexion.cursor()
         cursor.execute("SELECT id_categoria, nombre, descripcion FROM categorias")
         for row in cursor.fetchall():
             tree_categorias.insert("", "end", values=row)
-
     except Exception as e:
-        messagebox.showerror("Error", f"Error al cargar autores:\n{e}")
+        messagebox.showerror("Error", f"Error al cargar categorías:\n{e}")
     finally:
         cursor.close()
         conexion.close()
 
-#Funcion para cargar libros
 def cargar_tabla_libros():
     for item in tree_libros.get_children():
         tree_libros.delete(item)
-    conexion = conectar_db()
+    conexion = controllers.conectar_db()
     if not conexion:
         return
     try:
@@ -578,11 +183,10 @@ def cargar_tabla_libros():
         cursor.close()
         conexion.close()
 
-#Funcion para cargar clientes
 def cargar_tabla_clientes():
     for item in tree_clientes.get_children():
         tree_clientes.delete(item)
-    conexion = conectar_db()
+    conexion = controllers.conectar_db()
     if not conexion:
         return
     try:
@@ -596,6 +200,127 @@ def cargar_tabla_clientes():
         cursor.close()
         conexion.close()
 
+# FUNCIONES AUXILIARES (VISTA-CONTROLADOR)
+
+def _guardar_autor():
+    controllers.guardar_autor(
+        nombre_autor.get(),
+        apellido_autor.get(),
+        fecha_nacimiento.get(),
+        nacionalidad.get(),
+        biografia.get("1.0", "end")
+    )
+    limpiar_autores()
+    cargar_tabla_autores()
+
+def _actualizar_autor():
+    controllers.actualizar_autor(
+        id_autor.get(),
+        nombre_autor.get(),
+        apellido_autor.get(),
+        fecha_nacimiento.get(),
+        nacionalidad.get(),
+        biografia.get("1.0", "end")
+    )
+    limpiar_autores()
+    cargar_tabla_autores()
+
+def _eliminar_autor():
+    controllers.eliminar_autor(id_autor.get())
+    limpiar_autores()
+    cargar_tabla_autores()
+
+def _guardar_categoria():
+    controllers.guardar_categoria(
+        nombre_categoria.get(),
+        descripcion_categoria.get("1.0", "end")
+    )
+    limpiar_categorias()
+    cargar_tabla_categorias()
+
+def _actualizar_categoria():
+    controllers.actualizar_categoria(
+        id_categoria.get(),
+        nombre_categoria.get(),
+        descripcion_categoria.get("1.0", "end")
+    )
+    limpiar_categorias()
+    cargar_tabla_categorias()
+
+def _eliminar_categoria():
+    controllers.eliminar_categoria(id_categoria.get())
+    limpiar_categorias()
+    cargar_tabla_categorias()
+
+def _guardar_libro():
+    controllers.guardar_libro(
+        titulo_libro.get(),
+        isbn.get(),
+        id_autor_libro.get(),
+        id_categoria_libro.get(),
+        precio.get(),
+        stock.get(),
+        fecha_publicacion.get()
+    )
+    limpiar_libros()
+    cargar_tabla_libros()
+
+def _actualizar_libro():
+    controllers.actualizar_libro(
+        id_libro.get(),
+        titulo_libro.get(),
+        isbn.get(),
+        id_autor_libro.get(),
+        id_categoria_libro.get(),
+        precio.get(),
+        stock.get(),
+        fecha_publicacion.get()
+    )
+    limpiar_libros()
+    cargar_tabla_libros()
+
+def _eliminar_libro():
+    controllers.eliminar_libro(id_libro.get())
+    limpiar_libros()
+    cargar_tabla_libros()
+
+def _guardar_cliente():
+    controllers.guardar_cliente(
+        nombre_cliente.get(),
+        apellido_cliente.get(),
+        email.get(),
+        telefono.get(),
+        direccion.get()
+    )
+    limpiar_clientes()
+    cargar_tabla_clientes()
+
+def _actualizar_cliente():
+    controllers.actualizar_cliente(
+        id_cliente.get(),
+        nombre_cliente.get(),
+        apellido_cliente.get(),
+        email.get(),
+        telefono.get(),
+        direccion.get()
+    )
+    limpiar_clientes()
+    cargar_tabla_clientes()
+
+def _eliminar_cliente():
+    controllers.eliminar_cliente(id_cliente.get())
+    limpiar_clientes()
+    cargar_tabla_clientes()
+
+def _guardar_venta():
+    controllers.guardar_venta(
+        id_cliente_venta.get(),
+        id_libro_venta.get(),
+        cantidad.get(),
+        precio_unitario.get(),
+        fecha_venta.get()
+    )
+    limpiar_ventas()
 
 # INTERFAZ: PESTAÑA 1 - AUTORES
 titulo1 = tk.Label(tab1, text="GESTIÓN DE AUTORES", font=("Arial", 16, "bold"), fg=rgb_to_hex(0, 0, 255))
@@ -628,7 +353,7 @@ tk.Label(form_frame1, text="Biografía:", font=("Arial", 12)).grid(row=6, column
 biografia = tk.Text(form_frame1, width=25, height=3, font=("Arial", 10), relief="solid", bd=1)
 biografia.grid(row=6, column=1, sticky="w", pady=10)
 
-crear_botones(tab1, limpiar_autores, guardar_autor, actualizar_autor, eliminar_autor)
+crear_botones(tab1, limpiar_autores, _guardar_autor, _actualizar_autor, _eliminar_autor)
 
 # Tabla para mostrar autores
 frame_tabla1 = tk.Frame(tab1)
@@ -636,20 +361,15 @@ frame_tabla1.pack(fill="both", expand=True, padx=20, pady=10)
 
 columns1 = ("ID", "Nombre", "Apellido", "Fecha Nac.", "Nacionalidad")
 tree_autores = ttk.Treeview(frame_tabla1, columns=columns1, show="headings")
-
-# Configurar encabezados
 for col in columns1:
     tree_autores.heading(col, text=col)
     tree_autores.column(col, width=120)
-
 tree_autores.pack(side="left", fill="both", expand=True)
 
-# Scrollbar
 scrollbar1 = ttk.Scrollbar(frame_tabla1, orient="vertical", command=tree_autores.yview)
 tree_autores.configure(yscroll=scrollbar1.set)
 scrollbar1.pack(side="right", fill="y")
 
-# Cargar datos al iniciar
 cargar_tabla_autores()
 
 # INTERFAZ: PESTAÑA 2 - CATEGORÍAS
@@ -671,7 +391,7 @@ tk.Label(form_frame2, text="Descripción:", font=("Arial", 12)).grid(row=3, colu
 descripcion_categoria = tk.Text(form_frame2, width=25, height=4, font=("Arial", 10), relief="solid", bd=1)
 descripcion_categoria.grid(row=3, column=1, sticky="w", pady=10)
 
-crear_botones(tab2, limpiar_categorias, guardar_categoria, actualizar_categoria, eliminar_categoria)
+crear_botones(tab2, limpiar_categorias, _guardar_categoria, _actualizar_categoria, _eliminar_categoria)
 
 frame_tabla2 = tk.Frame(tab2)
 frame_tabla2.pack(fill="both", expand=True, padx=20, pady=10)
@@ -728,9 +448,8 @@ tk.Label(form_frame3, text="Fecha Publicación:", font=("Arial", 12)).grid(row=8
 fecha_publicacion = tk.Entry(form_frame3, width=25, font=("Arial", 12), relief="solid", bd=1)
 fecha_publicacion.grid(row=8, column=1, sticky="w", pady=10)
 
-crear_botones(tab3, limpiar_libros, guardar_libro, actualizar_libro, eliminar_libro)
+crear_botones(tab3, limpiar_libros, _guardar_libro, _actualizar_libro, _eliminar_libro)
 
-# Tabla Libros
 frame_tabla3 = tk.Frame(tab3)
 frame_tabla3.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -779,9 +498,8 @@ tk.Label(form_frame4, text="Dirección:", font=("Arial", 12)).grid(row=6, column
 direccion = tk.Entry(form_frame4, width=25, font=("Arial", 12), relief="solid", bd=1)
 direccion.grid(row=6, column=1, sticky="w", pady=10)
 
-crear_botones(tab4, limpiar_clientes, guardar_cliente, actualizar_cliente, eliminar_cliente)
+crear_botones(tab4, limpiar_clientes, _guardar_cliente, _actualizar_cliente, _eliminar_cliente)
 
-# Tabla Clientes
 frame_tabla4 = tk.Frame(tab4)
 frame_tabla4.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -833,6 +551,8 @@ total.grid(row=6, column=1, sticky="w", pady=10)
 tk.Label(form_frame5, text="Fecha Venta:", font=("Arial", 12)).grid(row=7, column=0, sticky="w", padx=(0, 10), pady=10)
 fecha_venta = tk.Entry(form_frame5, width=25, font=("Arial", 12), relief="solid", bd=1)
 fecha_venta.grid(row=7, column=1, sticky="w", pady=10)
+
+crear_botones(tab5, limpiar_ventas, _guardar_venta)
 
 # EJECUTAR LA APLICACIÓN
 root.mainloop()
