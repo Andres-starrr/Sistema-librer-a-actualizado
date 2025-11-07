@@ -2,7 +2,7 @@ from tkinter import messagebox
 from db import conectar_db
 from Validaciones import validar_autor, validar_categoria, validar_libro, validar_cliente
 
-# === AUTORES ===
+# AUTORES
 def guardar_autor(nombre, apellido, fecha_nacimiento, nacionalidad, biografia):
     if not validar_autor(nombre, apellido, fecha_nacimiento, nacionalidad, biografia):
         return
@@ -60,7 +60,7 @@ def eliminar_autor(id_autor):
         cursor.close()
         conexion.close()
 
-# === CATEGORÍAS ===
+# CATEGORÍAS
 def guardar_categoria(nombre, descripcion):
     if not validar_categoria(nombre, descripcion):
         return
@@ -114,7 +114,7 @@ def eliminar_categoria(id_categoria):
         cursor.close()
         conexion.close()
 
-# === LIBROS ===
+# LIBROS
 def guardar_libro(titulo, isbn, id_autor, id_categoria, precio, stock, fecha_publicacion):
     if not validar_libro(titulo, isbn, id_autor, id_categoria, precio, stock, fecha_publicacion):
         return
@@ -174,7 +174,7 @@ def eliminar_libro(id_libro):
         cursor.close()
         conexion.close()
 
-# === CLIENTES ===
+# CLIENTES
 def guardar_cliente(nombre, apellido, email, telefono, direccion):
     if not validar_cliente(nombre, apellido, email, telefono, direccion):
         return
@@ -232,7 +232,7 @@ def eliminar_cliente(id_cliente):
         cursor.close()
         conexion.close()
 
-# === VENTAS ===
+# VENTAS
 def guardar_venta(id_cliente, id_libro, cantidad, precio_unitario, fecha_venta):
     conexion = conectar_db()
     if not conexion:
@@ -254,4 +254,5 @@ def guardar_venta(id_cliente, id_libro, cantidad, precio_unitario, fecha_venta):
             messagebox.showerror("Error", f"Error en venta:\n{e}")
     finally:
         cursor.close()
+
         conexion.close()
